@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fareedline</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background-color: #f7f7f7;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        #chatBox {
+            width: 100%;
+            max-width: 350px;
+            height: 500px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #messages {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .message {
+            background-color: #007bff;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            width: fit-content;
+            max-width: 80%;
+        }
+
+        #messageBox {
+            border-top: 1px solid #eee;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        #message {
+            flex-grow: 1;
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        #sendButton {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 16px;
+            line-height: 1;
+            padding: 0;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        @media (max-width: 400px) {
+            body {
+                padding: 10px;
+            }
+
+            #chatBox {
+                width: 100%;
+                height: calc(100vh - 20px);
+                max-width: none;
+            }
+        }
+		
+		.messageContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end; /* لجعل الرسائل تظهر على الجانب الأيمن */
+            margin-bottom: 10px;
+        }
+
+        .messageDetails {
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #666;
+            margin-bottom: 2px;
+        }
+
+        .messageDetails .sender {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .message {
+            background-color: #007bff;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 20px;
+            max-width: 80%;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="chatBox">
+    <div id="messages">
+        <!-- الرسائل ستظهر هنا -->
+    </div>
+    <div id="messageBox">
+        <input type="text" id="message" placeholder="اكتب رسالتك هنا...">
+        <button id="sendButton" onclick="sendMessage()">➤</button>
+    </div>
+</div>
+
+
+<script>
+    function sendMessage() {
+        var messageText = document.getElementById('message').value;
+        if (messageText.trim() !== '') {
+            var messagesContainer = document.getElementById('messages');
+            
+            var messageContainer = document.createElement('div');
+            messageContainer.classList.add('messageContainer');
+
+            var messageDetails = document.createElement('div');
+            messageDetails.classList.add('messageDetails');
+
+            var sender = document.createElement('span');
+            sender.classList.add('sender');
+            sender.textContent = 'أنت'; // أو يمكنك استخدام اسم المستخدم الحقيقي إذا كان متوفرًا
+
+            var timestamp = document.createElement('span');
+            timestamp.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            var messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.textContent = messageText;
+
+            messageDetails.appendChild(sender);
+            messageDetails.appendChild(timestamp);
+            messageContainer.appendChild(messageDetails);
+            messageContainer.appendChild(messageElement);
+
+            messagesContainer.appendChild(messageContainer);
+
+            document.getElementById('message').value = ''; // تفريغ حقل الرسالة
+            messagesContainer.scrollTop = messagesContainer.scrollHeight; // التمرير إلى أسفل الرسالة الجديدة
+        }
+    }
+</script>
+
+</body>
+</html>

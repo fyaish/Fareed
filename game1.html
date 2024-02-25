@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falafel games engine</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        #gameCanvas {
+            border: 1px solid black;
+        }
+        .control-panel {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .control-panel * {
+            margin: 5px;
+        }
+        .shapes-list {
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .shape-item {
+            cursor: pointer;
+            padding: 2px;
+        }
+        .selected {
+            background-color: lightblue;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="gameCanvas" width="480" height="320"></canvas>
+
+<div class="control-panel">
+    <select id="shapeType">
+        <option value="square">Square</option>
+        <option value="circle">Circle</option>
+    </select>
+    <input type="color" id="shapeColor" value="#FF0000">
+    <input type="number" id="shapeSize" min="10" max="100" value="30">
+    <button onclick="addShape()">Add Shape</button>
+    <button onclick="deleteSelectedShape()">Delete Shape</button>
+    <button onclick="rotateSelectedShape()">Rotate Shape</button>
+    <button onclick="saveCanvas()">Save Game As File</button>
+</div>
+
+<div id="shapesList">
+    <!-- عناصر القائمة تُضاف هنا ديناميكيًا -->
+</div>
+
+<div id="codeTemplates" style="display: none;">
+    <select id="codeSelect">
+        <option value="">اختر كود...</option>
+        <option value="whenPress">WHEN PRESS</option>
+        <option value="thenDo">THEN</option>
+    </select>
+</div>
+
+<div id="availableCodes" style="display: none;">
+    <!-- قائمة بالكودات المتاحة تُضاف هنا ديناميكيًا بناءً على الاختيار -->
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let shapes = [];
+    let selectedShapeIndex = null;
+    
+    function showCodeTemplates() {
+        document.getElementById('codeTemplates').style.display = 'block';
+        
+        document.getElementById('codeSelect').onchange = function(event) {
+            const selectedCode = event.target.value;
+            showAvailableCodes(selectedCode);
+        };
+    }
+
+	function showAvailableCodes(code) {
+		const availableCodesDiv = document.getElementById('availableCodes');
+		availableCodesDiv.innerHTML = ''; // Clear previous content
+
+		if (code === 'whenPress') {
+			// Example: Display a list of keys to choose from
+			const keySelect = document.createElement('select');
+			const keys = ['ArrowUp', 'ArrowDown', 'Space'];
+			keys.forEach(key => {
+				const option = document.createElement('option');
+				option.value = key;
+				option.textContent = key;
+				keySelect.appendChild(option);
+			});
+			availableCodesDiv.appendChild(keySelect);
+		} else if (code === 'thenDo') {
+			// Example: Display a list of actions
+			const actionSelect = document.createElement('select');
+			const actions = ['Move Up', 'Change Color'];
+			actions.forEach(action => {
+				const option = document.createElement('option');
+				option.value = action;
+				option.textContent = action;
+				actionSelect.appendChild(option);
+			});
+			availableCodesDiv.appendChild(actionSelect);
+		}
+
+		availableCodesDiv.style.display = 'block'; // Show the available options
+	}
+
+    function addShape() {
+        const shapeType = document.getElementById('shapeType').value;
+        const color = document.getElementById('shapeColor').value;
+        const size = parseInt(document.getElementById('shapeSize').value);
+        const shape = {
+            type: shapeType,
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            size: size,
+            color: color,
+            rotation: 0
+        };
+        shapes.push(shape);
+        refreshUI();
+        updateShapesList();
+    }
+
+    function updateShapesList() {
+        const list = document.getElementById('shapesList');
+        list.innerHTML = ''; // Clear the list before repopulating
+        shapes.forEach((shape, index) => {
+            const item = document.createElement('div');
+            item.className = 'shape-item' + (index === selectedShapeIndex ? ' selected' : '');
+            item.textContent = `Shape ${index + 1}: ${shape.type}, Size: ${shape.size}`;
+            item.onclick = function() { 
+                selectShape(index); 
+                showCodeTemplates(); 
+            };
+            list.appendChild(item);
+        });
+    }
+
+    function drawShapes() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        shapes.forEach((shape) => {
+            ctx.save();
+            ctx.translate(shape.x, shape.y);
+            ctx.rotate(shape.rotation * Math.PI / 180);
+            ctx.fillStyle = shape.color;
+
+            if (shape.type === 'square') {
+                ctx.fillRect(-shape.size / 2, -shape.size / 2, shape.size, shape.size);
+            } else if (shape.type === 'circle') {
+                ctx.beginPath();
+                ctx.arc(0, 0, shape.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.restore();
+        });
+    }
+
+    function selectShape(index) {
+        selectedShapeIndex = index;
+        refreshUI();
+    }
+
+    function deleteSelectedShape() {
+        if (selectedShapeIndex !== null) {
+            shapes.splice(selectedShapeIndex, 1);
+            selectedShapeIndex = null;
+            refreshUI();
+            updateShapesList();
+        }
+    }
+
+    function rotateSelectedShape() {
+        if (selectedShapeIndex !== null) {
+            shapes[selectedShapeIndex].rotation += 10; // Rotate by 10 degrees
+            refreshUI();
+        }
+    }
+
+    function refreshUI() {
+        drawShapes();
+    }
+
+    window.addEventListener('keydown', handleArrowKeys);
+
+    function handleArrowKeys(event) {
+        if (selectedShapeIndex === null) return;
+        const shape = shapes[selectedShapeIndex];
+        switch(event.key) {
+            case 'ArrowLeft': shape.x -= 10; break;
+            case 'ArrowRight': shape.x += 10; break;
+            case 'ArrowUp': shape.y -= 10; break;
+            case 'ArrowDown': shape.y += 10; break;
+        }
+        refreshUI();
+    }
+
+    refreshUI();
+	
+       function saveContent() {
+            // Get the HTML content of the div, including the embedded script
+            var htmlContent = document.getElementById('gameCanvas').innerHTML;
+
+            // Create a blob with the HTML content
+            var blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+
+            // Create a link element
+            var downloadLink = document.createElement("a");
+
+            // Create a URL for the blob
+            downloadLink.href = window.URL.createObjectURL(blob);
+
+            // Set the download attribute for the link. This will suggest a filename to save as.
+            downloadLink.download = "divContentWithJS.html";
+
+            // Append the link to the document
+            document.body.appendChild(downloadLink);
+
+            // Programmatically click the link to trigger the download
+            downloadLink.click();
+
+            // Remove the link after downloading
+            document.body.removeChild(downloadLink);
+        }
+		
+		function saveCanvas() {
+            // Get the canvas element
+            var canvas = document.getElementById("gameCanvas");
+
+            // Convert the canvas to a data URL (image)
+            var dataURL = canvas.toDataURL("image/png");
+
+            // Create a link element
+            var downloadLink = document.createElement("a");
+
+            // Set the href of the link to the data URL
+            downloadLink.href = dataURL;
+
+            // Set the download attribute of the link. This will suggest a filename to save as.
+            downloadLink.download = "canvasImage.png";
+
+            // Append the link to the document
+            document.body.appendChild(downloadLink);
+
+            // Programmatically click the link to trigger the download
+            downloadLink.click();
+
+            // Remove the link after downloading
+            document.body.removeChild(downloadLink);
+        }
+</script>
+
+</body>
+</html>
